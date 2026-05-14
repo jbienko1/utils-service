@@ -1,0 +1,226 @@
+:root {
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.45;
+  color: #1a1a1a;
+  background: #f4f5f7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.wrap {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 2.5rem;
+}
+
+header {
+  margin-bottom: 1.5rem;
+}
+
+header h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.35rem;
+}
+
+header p {
+  margin: 0;
+  color: #444;
+  font-size: 0.95rem;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: #bbb;
+}
+
+.dot.ok {
+  background: #1b7f3a;
+}
+
+.dot.err {
+  background: #b42318;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e1e4e8;
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+
+.card h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  margin-bottom: 0.75rem;
+}
+
+.file-area {
+  margin-bottom: 0.75rem;
+}
+
+.dropzone {
+  border: 2px dashed #bbb;
+  border-radius: 8px;
+  padding: 1rem 0.85rem;
+  text-align: center;
+  min-height: 4.25rem;
+  cursor: default;
+  background: #fafafa;
+  margin-bottom: 0.55rem;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.dropzone:focus-visible {
+  outline: 2px solid #2a6fdb;
+  outline-offset: 2px;
+}
+
+.file-area.drag-active .dropzone {
+  border-color: #2a6fdb;
+  background: #eef4ff;
+}
+
+.dropzone-text {
+  display: block;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.file-name {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  color: #444;
+  word-break: break-all;
+}
+
+.output-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.35rem 0 0.5rem;
+}
+
+.clipboard-hint {
+  font-size: 0.82rem;
+  color: #555;
+  flex: 1 1 10rem;
+  min-height: 1.2em;
+}
+
+.output-block.is-collapsed textarea {
+  max-height: 0;
+  min-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin: 0;
+  overflow: hidden;
+  border: none;
+  resize: none;
+  opacity: 0;
+  transition:
+    max-height 0.2s ease,
+    opacity 0.15s ease,
+    padding 0.15s ease;
+}
+
+.output-block textarea {
+  transition:
+    max-height 0.2s ease,
+    opacity 0.15s ease,
+    padding 0.15s ease;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: #333;
+}
+
+input[type="file"] {
+  max-width: 100%;
+}
+
+select {
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #fff;
+}
+
+button {
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid #2a6fdb;
+  background: #2a6fdb;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+button.secondary {
+  background: #fff;
+  color: #2a6fdb;
+}
+
+.meta {
+  font-size: 0.85rem;
+  color: #555;
+  margin: 0.35rem 0 0.5rem;
+}
+
+textarea {
+  width: 100%;
+  min-height: 10rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+.err {
+  color: #8a1c16;
+  font-size: 0.9rem;
+  margin-top: 0.35rem;
+}
+
+footer {
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  color: #666;
+}
