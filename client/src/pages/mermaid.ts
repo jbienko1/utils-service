@@ -3,10 +3,9 @@ import { readError } from "../lib/http";
 import { wireDropzone } from "../lib/files";
 import { wireHealthButton } from "../lib/health";
 
-const DEFAULT_SRC = `@startuml
-Alice -> Bob: Cześć
-Bob --> Alice: OK
-@enduml
+const DEFAULT_SRC = `graph TD
+  A[Klient] --> B[API]
+  B --> C[Mermaid]
 `;
 
 let lastPreviewUrl: string | null = null;
@@ -18,35 +17,35 @@ function revokePreview(): void {
   }
 }
 
-/** Wywołaj przy zmianie trasy, żeby zwolnić blob URL podglądu. */
-export function cleanupPlantumlPreview(): void {
+export function cleanupMermaidPreview(): void {
   revokePreview();
 }
 
-export function renderPlantumlPage(root: HTMLElement): void {
+export function renderMermaidPage(root: HTMLElement): void {
   revokePreview();
   root.innerHTML = appShell(
-    "/plantuml",
+    "/mermaid",
     `
-      <section class="card" aria-labelledby="puml-h">
-        <h2 id="puml-h">PlantUML → obraz</h2>
+      <section class="card" aria-labelledby="mer-h">
+        <h2 id="mer-h">Mermaid → obraz</h2>
         <p class="lead">
-          Wymaga <strong>plantuml</strong> i <strong>Graphviz (dot)</strong> po stronie API (w Dockerze jest w obrazie).
-          Możesz wkleić źródło w polu poniżej albo przeciągnąć plik .puml / .txt na strefę.
+          Wymaga <strong>Node</strong> oraz <code>mmdc</code> (katalog <code>mermaid-cli/</code> w repo lub globalny).
+          Przeglądarkę podaje serwer: <code>UTILS_PUPPETEER_EXECUTABLE_PATH</code> (Chrome/Chromium).
+          Możesz wkleić źródło w polu poniżej albo przeciągnąć plik .mmd / .md / .txt na strefę.
         </p>
-        <form id="puml-form">
+        <form id="mer-form">
           <label>
-            Źródło PlantUML
-            <textarea id="puml-src" class="textarea-puml" spellcheck="false">${DEFAULT_SRC.trim()}</textarea>
+            Źródło Mermaid
+            <textarea id="mer-src" class="textarea-puml" spellcheck="false">${DEFAULT_SRC.trim()}</textarea>
           </label>
           <div class="file-area" style="margin-top:0.5rem">
             <div
               class="dropzone"
               tabindex="0"
               role="region"
-              aria-label="Strefa upuszczania pliku PlantUML lub tekstu"
+              aria-label="Strefa upuszczania pliku Mermaid lub tekstu"
             >
-              <span class="dropzone-text">Przeciągnij plik .puml / .txt lub wybierz poniżej.</span>
+              <span class="dropzone-text">Przeciągnij plik .mmd / .md / .txt lub wybierz poniżej.</span>
               <span class="file-name" aria-live="polite"></span>
             </div>
             <label>
@@ -54,38 +53,38 @@ export function renderPlantumlPage(root: HTMLElement): void {
               <input
                 type="file"
                 name="file"
-                accept=".puml,.plantuml,.pu,.txt,.iuml,text/plain,text/x-puml"
+                accept=".mmd,.mermaid,.md,.txt,text/plain,text/markdown"
               />
             </label>
           </div>
           <div class="row">
             <label>
               Format
-              <select name="format" id="puml-format">
+              <select name="format" id="mer-format">
                 <option value="svg">SVG</option>
                 <option value="png">PNG</option>
               </select>
             </label>
             <button type="submit">Generuj podgląd</button>
           </div>
-          <div id="puml-preview-wrap" class="puml-preview-wrap" hidden>
+          <div id="mer-preview-wrap" class="puml-preview-wrap" hidden>
             <p class="meta">Podgląd:</p>
-            <img id="puml-preview" class="diagram-preview" alt="Wynik PlantUML" />
+            <img id="mer-preview" class="diagram-preview" alt="Wynik Mermaid" />
           </div>
-          <p id="puml-err" class="err" role="alert"></p>
+          <p id="mer-err" class="err" role="alert"></p>
         </form>
       </section>
     `,
   );
   wireHealthButton(root);
 
-  const form = root.querySelector("#puml-form");
-  const ta = root.querySelector("#puml-src");
-  const fileIn = root.querySelector<HTMLInputElement>('#puml-form input[type="file"][name="file"]');
-  const fmt = root.querySelector("#puml-format");
-  const err = root.querySelector("#puml-err");
-  const wrap = root.querySelector("#puml-preview-wrap");
-  const img = root.querySelector("#puml-preview");
+  const form = root.querySelector("#mer-form");
+  const ta = root.querySelector("#mer-src");
+  const fileIn = root.querySelector<HTMLInputElement>('#mer-form input[type="file"][name="file"]');
+  const fmt = root.querySelector("#mer-format");
+  const err = root.querySelector("#mer-err");
+  const wrap = root.querySelector("#mer-preview-wrap");
+  const img = root.querySelector("#mer-preview");
 
   if (
     !(form instanceof HTMLFormElement) ||
@@ -99,7 +98,7 @@ export function renderPlantumlPage(root: HTMLElement): void {
     return;
   }
 
-  wireDropzone(form, { mode: "plantumlSource", err });
+  wireDropzone(form, { mode: "mermaidSource", err });
 
   fileIn.addEventListener("change", () => {
     const f = fileIn.files?.[0];
@@ -122,7 +121,7 @@ export function renderPlantumlPage(root: HTMLElement): void {
       body.append("file", chosen);
     } else {
       const blob = new Blob([ta.value], { type: "text/plain" });
-      body.append("file", blob, "diagram.puml");
+      body.append("file", blob, "diagram.mmd");
     }
 
     const btn = form.querySelector('button[type="submit"]');
@@ -130,7 +129,7 @@ export function renderPlantumlPage(root: HTMLElement): void {
     btn.disabled = true;
     try {
       const q = encodeURIComponent(fmt.value);
-      const res = await fetch(`/v1/plantuml-to-image?format=${q}`, { method: "POST", body });
+      const res = await fetch(`/v1/mermaid-to-image?format=${q}`, { method: "POST", body });
       if (!res.ok) throw new Error(await readError(res));
       const outBlob = await res.blob();
       lastPreviewUrl = URL.createObjectURL(outBlob);

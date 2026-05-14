@@ -10,11 +10,26 @@ Dokument skrócony dla człowieka. Skrót w repozytorium: [README.md](../../READ
 | **Tesseract OCR** (+ pakiety językowe) | Tylko jeśli używasz `ocr=on` lub `ocr=auto` na PDF |
 | **Pandoc** (w `PATH`) | Tylko dla `POST /v1/markdown-to-docx` |
 | **PlantUML** (CLI w `PATH`) + **Graphviz** (`dot`) | Tylko dla `POST /v1/plantuml-to-image` (Graphviz jest wymagany m.in. dla diagramów sekwencji i klas) |
-| **Docker** (opcjonalnie) | Uruchomienie w kontenerze zgodnym z [Dockerfile](../../Dockerfile); w obrazie są m.in. Tesseract, Pandoc, PlantUML i Graphviz — **nie musisz** używać Dockera, jeśli masz te narzędzia lokalnie |
+| **Node.js + npm** oraz **Mermaid CLI** (`mmdc`) | Tylko dla `POST /v1/mermaid-to-image` — zależności w katalogu [`mermaid-cli/`](../../mermaid-cli/) (`npm install` / w Dockerze `npm ci`) |
+| **Chrome / Chromium** (ścieżka w `UTILS_PUPPETEER_EXECUTABLE_PATH`) | Dla Mermaid: Puppeteer w `mmdc` — **obowiązkowe przy typowym deployu** (obraz Docker nie dołącza przeglądarki; ustaw ścieżkę przy `docker run` / w compose) |
+| **Docker** (opcjonalnie) | Uruchomienie w kontenerze zgodnym z [Dockerfile](../../Dockerfile); w obrazie są m.in. Tesseract, Pandoc, PlantUML, Graphviz, Node + zainstalowany `@mermaid-js/mermaid-cli` z `mermaid-cli/package-lock.json` — **bez** wbudowanego Chrome; trzeba podać `UTILS_PUPPETEER_EXECUTABLE_PATH` lub zbudować własny obraz z Chromium |
 
 Na **Windows** Tesseract można zainstalować m.in. z [wikii UB Mannheim](https://github.com/UB-Mannheim/tesseract/wiki); upewnij się, że `tesseract` jest w `PATH` (lub skonfiguruj `pytesseract` — obecnie serwis zakłada domyślne wykrywanie binarki przez bibliotekę).
 
 **PlantUML na Windows:** instalatory (np. Chocolatey) często dodają `plantuml.cmd` / `plantuml.bat`. Serwis uruchamia je przez `cmd /c`, bo `CreateProcess` nie startuje plików wsadowych tak jak prawdziwego `.exe`. Po instalacji zrestartuj terminal / IDE, żeby `uvicorn` widział ten sam `PATH` co ręczne `plantuml -version`.
+
+**Mermaid (`mmdc`) — dwa warianty dev:**
+
+1. **Lokalny (zalecany w repo):** z katalogu głównego repozytorium:
+   `cd mermaid-cli && npm install`  
+   Serwis woła `mermaid-cli/node_modules/.bin/mmdc` (na Windowsie `mmdc.cmd` przez `cmd /c`).
+2. **Globalny:** `npm install -g @mermaid-js/mermaid-cli` — wtedy w `PATH` jest `mmdc`; serwis użyje go, jeśli brak lokalnej instalacji.
+
+**Przeglądarka dla Mermaid:** ustaw w `.env` np. `UTILS_PUPPETEER_EXECUTABLE_PATH=C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe` (Windows) lub `/usr/bin/chromium` / `/usr/bin/google-chrome` (Linux). Przy ustawionej ścieżce włącza się `PUPPETEER_SKIP_CHROMIUM_DOWNLOAD` dla procesu `mmdc`. Bez ścieżki Puppeteer może pobrać Chromium (wygodne lokalnie, **niewskazane** w kontenerze bez dodatkowej konfiguracji).
+
+**Docker (przykład z Chromium w obrazie bazowym — Ty dostarczasz ścieżkę):** po zainstalowaniu Chromium w swoim obrazie lub bind-mount:
+
+`docker run ... -e UTILS_PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium ...`
 
 ## Instalacja (środowisko wirtualne)
 
@@ -75,6 +90,8 @@ UTILS_OCR_LANG=eng+pol
 UTILS_OCR_DPI=200
 UTILS_PANDOC_TIMEOUT_SEC=120
 UTILS_PLANTUML_TIMEOUT_SEC=120
+UTILS_MERMAID_TIMEOUT_SEC=120
+UTILS_PUPPETEER_EXECUTABLE_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
 UTILS_TEMP_DIR=C:\temp\utils-service
 ```
 
@@ -112,6 +129,7 @@ Pytanie brzmi zwykle: **czy biblioteki pod spodem da się „stroić”**, i **c
 |----------|---------------------|
 | `POST /v1/pdf-to-text` | **`ocr`**: `off` / `on` / `auto` — wybór ścieżki natywnej vs OCR oraz heurystyki auto. |
 | `POST /v1/to-markdown` | Tylko **plik** — brak dodatkowych query/body pod markitdown (uproszczenie kontraktu). |
+| `POST /v1/mermaid-to-image` | **Plik** + query **`format`**: `svg` / `png`; render przez `mmdc` (Puppeteer — ścieżka Chrome z `UTILS_PUPPETEER_EXECUTABLE_PATH`). |
 
 ### Poziom serwera (`UTILS_*` w `Settings`)
 
@@ -120,6 +138,8 @@ Dotyczy głównie **PDF + OCR** i limitów:
 - `UTILS_OCR_LANG`, `UTILS_OCR_DPI`, `UTILS_OCR_AUTO_CHARS_PER_PAGE_THRESHOLD` — sterują zachowaniem Tesseract i progiem trybu `auto`.
 - `UTILS_PANDOC_TIMEOUT_SEC` — limit czasu wywołania Pandoc przy `markdown-to-docx`.
 - `UTILS_PLANTUML_TIMEOUT_SEC` — limit czasu wywołania PlantUML przy `plantuml-to-image`.
+- `UTILS_MERMAID_TIMEOUT_SEC` — limit czasu wywołania Mermaid CLI przy `mermaid-to-image`.
+- `UTILS_PUPPETEER_EXECUTABLE_PATH` — ścieżka do Chrome/Chromium dla Puppeteer (`mmdc`); przy deployu zwykle **wymagana** w Dockerze (obraz bazowy nie instaluje przeglądarki).
 - `UTILS_MAX_UPLOAD_BYTES`, `UTILS_TEMP_DIR` — limity i miejsce zapisu uploadu.
 
 To są **parametry uruchomieniowe procesu** (jedna wartość na instancję serwera), a nie per-request — chyba że w przyszłości dodasz mapowanie nagłówków / kontekstu na ustawienia (obecnie nie ma).

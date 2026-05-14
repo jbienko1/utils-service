@@ -1,5 +1,6 @@
 import { renderHome } from "./pages/home";
 import { renderMarkdownToDocxPage } from "./pages/markdown-to-docx";
+import { cleanupMermaidPreview, renderMermaidPage } from "./pages/mermaid";
 import { cleanupPlantumlPreview, renderPlantumlPage } from "./pages/plantuml";
 import { renderPdfPage } from "./pages/pdf-to-text";
 import { renderToMarkdownPage } from "./pages/to-markdown";
@@ -11,6 +12,7 @@ const TITLES: Readonly<Record<string, string>> = {
   "/to-markdown": "Plik → Markdown — utils-service",
   "/markdown-to-docx": "Markdown → DOCX — utils-service",
   "/plantuml": "PlantUML — utils-service",
+  "/mermaid": "Mermaid — utils-service",
 };
 
 function currentPath(): string {
@@ -24,6 +26,7 @@ function renderRoute(): void {
   const root = document.getElementById("app");
   if (!root) return;
   cleanupPlantumlPreview();
+  cleanupMermaidPreview();
   const path = currentPath();
   document.title = TITLES[path] ?? TITLES["/"]!;
 
@@ -39,6 +42,9 @@ function renderRoute(): void {
       break;
     case "/plantuml":
       renderPlantumlPage(root);
+      break;
+    case "/mermaid":
+      renderMermaidPage(root);
       break;
     case "/":
       renderHome(root);

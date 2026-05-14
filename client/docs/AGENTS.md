@@ -41,6 +41,7 @@ Pracujesz w katalogu **`client/`** — osobna aplikacja Node (Vite), niezależna
 - **Dokumentacja po zmianach** — po zmianie zachowania frontu, proxy, portów lub wymagań Node: zaktualizuj [install-and-run.md](install-and-run.md), [README.md](../README.md) (skrót), ewent. [../../docs/AGENT_WORKFLOW.md](../../docs/AGENT_WORKFLOW.md) (sekcja klient). Pełna tabela: [Aktualizacja dokumentacji](../../docs/AGENT_WORKFLOW.md#aktualizacja-dokumentacji-po-zmianach).
 - **Ścieżki API** — trzymaj względne URL (`/v1/...`), żeby działał proxy Vite; unikaj twardych `http://127.0.0.1:8000` w `fetch` (CORS poza dev).
 - **Typy** — `tsc --noEmit` jest w `npm run build`; po większych zmianach uruchom `npm run build` lokalnie.
+- **Textarea + upload** — formularze z polem tekstowym i opcjonalnym plikiem (dropzone, priorytet pliku przy submitcie): [Usługa z treścią jako plik (textarea + upload)](../../docs/SERVICE_AND_CLIENT_PATTERN.md#textarea-file-upload).
 
 ## Typowe pułapki
 

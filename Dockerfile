@@ -9,12 +9,18 @@ RUN apt-get update \
         pandoc \
         plantuml \
         graphviz \
+        nodejs \
+        npm \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY pyproject.toml README.md ./
 COPY app ./app
+COPY mermaid-cli/package.json mermaid-cli/package-lock.json ./mermaid-cli/
+
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+RUN cd mermaid-cli && npm ci --omit=dev
 
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir .

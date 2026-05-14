@@ -26,6 +26,16 @@ class Settings(BaseSettings):
         le=600,
         description="Timeout wywołania PlantUML (render diagramu) w sekundach.",
     )
+    mermaid_timeout_sec: int = Field(
+        default=120,
+        ge=5,
+        le=600,
+        description="Timeout wywołania Mermaid CLI (mmdc) w sekundach.",
+    )
+    puppeteer_executable_path: Path | None = Field(
+        default=None,
+        description="Ścieżka do Chrome/Chromium dla Puppeteer (mmdc). Ustaw przy deployu; włącza PUPPETEER_SKIP_CHROMIUM_DOWNLOAD.",
+    )
 
 
 @lru_cache

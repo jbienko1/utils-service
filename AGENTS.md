@@ -26,7 +26,7 @@ Ten plik jest **punktem startu**: co przeczytać dalej, jak uruchomić projekt i
 
 - `app/main.py` — instancja FastAPI, mount routerów `/v1`, `/health`.
 - `app/api/v1/` — routery HTTP (cienkie: walidacja, statusy, brak ciężkiej logiki).
-- `app/services/` — logika domenowa (PDF, markitdown, Pandoc / MD→DOCX, PlantUML).
+- `app/services/` — logika domenowa (PDF, markitdown, Pandoc / MD→DOCX, PlantUML, Mermaid).
 - `app/core/` — konfiguracja (`Settings`, prefiks `UTILS_`), zapis uploadów do temp.
 - `app/models/schemas.py` — modele odpowiedzi Pydantic.
 - `client/` — osobny front (**Vite** + TypeScript), własny `package.json`; dokumentacja w `client/docs/`.

@@ -24,6 +24,17 @@ Routing oparty o **hash** (`#/…`), żeby statyczny hosting i prosty serwer pli
 4. **Style** — jeśli potrzeba nowych komponentów UI, dopisz reguły w [`client/src/style.css`](../client/src/style.css).
 5. **Dokumentacja frontu** — [`client/docs/install-and-run.md`](../client/docs/install-and-run.md), ewent. [`client/docs/AGENTS.md`](../client/docs/AGENTS.md).
 
+<span id="textarea-file-upload"></span>
+
+### Usługa z treścią jako plik (textarea + upload)
+
+Gdy endpoint przyjmuje pole `file`, a w UI chcesz **wkleić źródło** oraz **opcjonalnie** wybrać lub upuścić plik (jak PDF / Markdown):
+
+- **HTML** — wewnątrz `<form>`: blok `.file-area` zawiera `.dropzone` (tekst zachęty), `.file-name` (etykieta wybranego pliku, `aria-live="polite"`) oraz `<input type="file" name="file" …>` z sensownym `accept`.
+- **DnD i walidacja rozszerzeń** — po zbudowaniu formularza wywołaj `wireDropzone(form, { mode: …, err })` z [`client/src/lib/files.ts`](../client/src/lib/files.ts). Tryb (`DropzoneMode`) musi odpowiadać regułom backendu dla uploadu (np. `plantumlSource`, `mermaidSource`, `markdownSource`, `pdf`). Komunikaty błędów z dropu trafiają w przekazany element `err` (zwykle ten sam `<p class="err">` co błędy submitu / API).
+- **Submit** — jeśli `input[name="file"]` ma wybrany plik z `size > 0`, do `FormData` dodaj ten plik jako `file`. W przeciwnym razie wyślij treść z **textarea** jako `Blob` z domyślną nazwą pliku zgodną z oczekiwaniami API (np. `diagram.puml`, `diagram.mmd`).
+- **Zmiana pliku** — przy `change` na `input[name="file"]` wczytaj zawartość pliku do textarea (żeby użytkownik widział to samo, co poleci na serwer).
+
 ## Odpowiedzi inne niż JSON
 
 Dla plików binarnych (np. DOCX): `Response` / `StreamingResponse` z właściwym `media_type` i `Content-Disposition: attachment`. W kliencie: `fetch` → `res.blob()` → tymczasowy `URL.createObjectURL` + programowe kliknięcie `<a download>`; nazwa pliku z nagłówka `Content-Disposition`, jeśli jest.
