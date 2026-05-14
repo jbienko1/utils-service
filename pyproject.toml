@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "utils-service"
 version = "0.1.0"
-description = "Małe usługi REST (PDF → tekst, pliki → Markdown)."
+description = "Małe usługi REST (PDF → tekst, pliki → Markdown, Markdown → DOCX)."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

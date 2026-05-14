@@ -15,6 +15,7 @@ Ten plik jest **punktem startu**: co przeczytać dalej, jak uruchomić projekt i
 | Dokument | Przeznaczenie |
 |----------|----------------|
 | [docs/SERVICE_AND_CLIENT_PATTERN.md](docs/SERVICE_AND_CLIENT_PATTERN.md) | Checklista: nowa usługa REST + strona w kliencie (Vite) |
+| [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md) | Jak dodać endpoint, warstwy kodu, typowe pułapki |
 | [app/docs/README.md](app/docs/README.md) | Indeks dokumentacji dla człowieka |
 | [app/docs/install-and-run.md](app/docs/install-and-run.md) | Instalacja, uruchomienie, Docker, `.env`, parametryzacja konwerterów |
 | [app/docs/api.md](app/docs/api.md) | Opis endpointów, kody błędów, standardy (OpenAPI); uzupełnienie `/docs` i `/openapi.json` |

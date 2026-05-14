@@ -35,6 +35,7 @@ Szczegółowa checklista (backend + klient + docs): [SERVICE_AND_CLIENT_PATTERN.
 | Nowe lub zmienione `UTILS_*` / `.env` | [README.md](../README.md) (tabela zmiennych); [app/docs/architecture.md](../app/docs/architecture.md) (sekcja konfiguracji); [app/docs/install-and-run.md](../app/docs/install-and-run.md) (przykład `.env`). |
 | Docker / zależności systemowe | [Dockerfile](../Dockerfile); [README.md](../README.md); [app/docs/install-and-run.md](../app/docs/install-and-run.md) (Docker, Tesseract). |
 | Zmiany w `client/` (front) | [client/docs/README.md](../client/docs/README.md), [client/docs/install-and-run.md](../client/docs/install-and-run.md), [client/docs/AGENTS.md](../client/docs/AGENTS.md); skrót [client/README.md](../client/README.md); ewent. [README.md](../README.md) (sekcja „Klient WWW”). |
+| Nowa usługa (pełny przepływ backend + front) | [docs/SERVICE_AND_CLIENT_PATTERN.md](SERVICE_AND_CLIENT_PATTERN.md) — upewnij się, że checklista jest spełniona. |
 
 **Indeks** dokumentacji dla człowieka: [app/docs/README.md](../app/docs/README.md) oraz [client/docs/README.md](../client/docs/README.md) (front). Nie zostawiaj rozjazdu między kodem a `api.md` / `README.md` / `install-and-run.md` (backend) ani `client/docs/*` (front).
 

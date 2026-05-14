@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 from typing import Annotated
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import Response
@@ -32,6 +33,20 @@ def _safe_download_filename(filename: str | None) -> str:
     if len(stem) > 80:
         stem = stem[:80]
     return f"{stem}.docx"
+
+
+def _content_disposition_attachment(display_name: str) -> str:
+    """RFC 5987: `filename` tylko ASCII (nagłówki HTTP / latin-1); pełna nazwa w `filename*=UTF-8''`."""
+    star = quote(display_name, encoding="utf-8")
+    stem = Path(display_name).stem
+    ascii_stem = "".join(
+        c if 32 <= ord(c) <= 126 and c not in {'\\', '"'} else "_" for c in stem
+    )
+    ascii_stem = re.sub(r"_+", "_", ascii_stem).strip("._") or "document"
+    if len(ascii_stem) > 80:
+        ascii_stem = ascii_stem[:80]
+    ascii_fallback = f"{ascii_stem}.docx"
+    return f"attachment; filename=\"{ascii_fallback}\"; filename*=UTF-8''{star}"
 
 
 @router.post("/markdown-to-docx")
@@ -65,9 +80,7 @@ async def markdown_to_docx_endpoint(
         return Response(
             content=docx_bytes,
             media_type=_DOCX_MEDIA,
-            headers={
-                "Content-Disposition": f'attachment; filename="{out_name}"',
-            },
+            headers={"Content-Disposition": _content_disposition_attachment(out_name)},
         )
     except ValueError as e:
         raise HTTPException(status_code=413, detail=str(e)) from e

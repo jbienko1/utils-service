@@ -17,6 +17,7 @@ Pracujesz w katalogu **`client/`** — osobna aplikacja Node (Vite), niezależna
 | [docs/README.md](README.md) | Indeks dokumentacji klienta |
 | [../vite.config.ts](../vite.config.ts) | Proxy `/v1`, `/health` → `VITE_API_PROXY_TARGET` |
 | [../../docs/AGENT_WORKFLOW.md](../../docs/AGENT_WORKFLOW.md) | Workflow całego repo + tabela aktualizacji dokumentacji |
+| [../../docs/SERVICE_AND_CLIENT_PATTERN.md](../../docs/SERVICE_AND_CLIENT_PATTERN.md) | Checklista: nowy endpoint + podstrona w kliencie |
 | [../../AGENTS.md](../../AGENTS.md) | Punkt startu dla pracy nad backendem i repo |
 
 ## Struktura `client/`
@@ -26,7 +27,11 @@ Pracujesz w katalogu **`client/`** — osobna aplikacja Node (Vite), niezależna
 | `package.json` | Skrypty: `dev`, `build` (`tsc --noEmit` + `vite build`), `preview` |
 | `vite.config.ts` | Port dev 5173, `loadEnv`, proxy na backend |
 | `index.html` | Punkt wejścia HTML |
-| `src/main.ts` | Szablon HTML w `render()`, `fetch` do `/health` i `/v1/...`, DnD plików (`DataTransfer`), schowek, zwijanie wyniku |
+| `src/main.ts` | Bootstrap: `startRouter()` (hash `#/…`) |
+| `src/router.ts` | Mapowanie ścieżki hash → strony |
+| `src/layout.ts` | Wspólny szkielet (nagłówek, nawigacja, stopka) |
+| `src/pages/*.ts` | HTML + logika formularzy dla poszczególnych usług |
+| `src/lib/*.ts` | Wspólne helpery (`fetch`, pliki, UI) |
 | `src/style.css` | Style |
 | `.env.example` | Szablon `VITE_API_PROXY_TARGET` |
 
