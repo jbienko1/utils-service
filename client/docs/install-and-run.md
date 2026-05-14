@@ -1,6 +1,6 @@
 # Instalacja i uruchomienie — klient WWW
 
-Lekki front w katalogu nadrzędnym [client/](../): **Vite 6** + **TypeScript**, bez Reacta. Woła endpointy API: `/health`, `/v1/pdf-to-text`, `/v1/to-markdown`, `/v1/markdown-to-docx`. Nawigacja między usługami: **hash** (`#/`, `#/pdf-to-text`, itd.) — zobacz [../../docs/SERVICE_AND_CLIENT_PATTERN.md](../../docs/SERVICE_AND_CLIENT_PATTERN.md).
+Lekki front w katalogu nadrzędnym [client/](../): **Vite 6** + **TypeScript**, bez Reacta. Woła endpointy API: `/health`, `/v1/pdf-to-text`, `/v1/to-markdown`, `/v1/markdown-to-docx`, `/v1/plantuml-to-image`. Nawigacja między usługami: **hash** (`#/`, `#/pdf-to-text`, itd.) — zobacz [../../docs/SERVICE_AND_CLIENT_PATTERN.md](../../docs/SERVICE_AND_CLIENT_PATTERN.md).
 
 ## Wymagania
 

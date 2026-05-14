@@ -5,6 +5,7 @@ Lekka usługa **FastAPI** z małymi endpointami REST:
 - `POST /v1/pdf-to-text` — tekst z PDF (PyMuPDF); opcjonalnie **OCR** (Tesseract).
 - `POST /v1/to-markdown` — konwersja obsługiwanych typów plików do Markdown ([markitdown](https://github.com/microsoft/markitdown)).
 - `POST /v1/markdown-to-docx` — konwersja Markdown / tekstu do DOCX (**Pandoc**).
+- `POST /v1/plantuml-to-image` — wizualizacja diagramu **PlantUML** (SVG lub PNG).
 
 ## Dokumentacja
 
@@ -18,6 +19,7 @@ Lekka usługa **FastAPI** z małymi endpointami REST:
 - Python **3.11+**
 - Do OCR: zainstalowany **Tesseract** oraz pakiety językowe zgodne z `UTILS_OCR_LANG` (np. na Windows instalator z [GitHub Tesseract](https://github.com/UB-Mannheim/tesseract/wiki); w Dockerze obraz instaluje `tesseract-ocr` + `eng` + `pol`).
 - Do **Markdown → DOCX:** zainstalowany [**Pandoc**](https://pandoc.org/installing.html) w `PATH` (w obrazie Docker `pandoc` jest dołączony w Dockerfile). **Docker nie jest obowiązkowy** — możesz pracować lokalnie z Pandoc + `uvicorn` tak jak z innymi narzędziami.
+- Do **PlantUML → obraz:** w `PATH` muszą być **`plantuml`** (zwykle z JRE) oraz **`dot`** z pakietu **Graphviz** (w Dockerze instalowane w Dockerfile).
 
 ## Instalacja i uruchomienie
 
@@ -46,7 +48,7 @@ docker run --rm -p 8000:8000 utils-service
 
 ## Klient WWW (`client/`)
 
-Osobna aplikacja Vite + TypeScript: nawigacja **hash** (`#/`, `#/pdf-to-text`, `#/to-markdown`, `#/markdown-to-docx`). Szczegóły: [client/docs/install-and-run.md](client/docs/install-and-run.md).
+Osobna aplikacja Vite + TypeScript: nawigacja **hash** (`#/`, `#/pdf-to-text`, `#/to-markdown`, `#/markdown-to-docx`, `#/plantuml`). Szczegóły: [client/docs/install-and-run.md](client/docs/install-and-run.md).
 
 ## Endpointy (skrót)
 
@@ -56,6 +58,11 @@ Odpowiedź JSON dla PDF: `text`, `page_count`, `used_ocr`. Dla `to-markdown`: `m
 
 - Formularz: pole `file` — `.md`, `.markdown` lub `.txt` (albo `text/markdown` / `text/plain`).
 - Odpowiedź: `200` — plik **DOCX** (`application/vnd.openxmlformats-officedocument.wordprocessingml.document`), nagłówek `Content-Disposition: attachment`.
+
+### `POST /v1/plantuml-to-image`
+
+- Formularz: pole `file` — źródło `.puml` / `.plantuml` / `.txt` itd.; query **`format`**: `svg` (domyślnie) lub `png`.
+- Odpowiedź: `200` — treść **SVG** lub **PNG**.
 
 ### `GET /health`
 
@@ -71,5 +78,6 @@ Odpowiedź JSON dla PDF: `text`, `page_count`, `used_ocr`. Dla `to-markdown`: `m
 | `UTILS_OCR_DPI` | DPI renderu stron przy OCR | `200` |
 | `UTILS_OCR_AUTO_CHARS_PER_PAGE_THRESHOLD` | W trybie `ocr=auto`: jeśli średnio mniej znaków na stronę niż ta wartość, uruchamiany jest OCR | `30` |
 | `UTILS_PANDOC_TIMEOUT_SEC` | Timeout wywołania Pandoc (`markdown-to-docx`), sekundy | `120` |
+| `UTILS_PLANTUML_TIMEOUT_SEC` | Timeout wywołania PlantUML (`plantuml-to-image`), sekundy | `120` |
 
 Pełniejszy opis: [app/docs/install-and-run.md](app/docs/install-and-run.md) oraz [app/docs/architecture.md](app/docs/architecture.md).

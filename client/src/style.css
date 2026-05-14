@@ -282,8 +282,27 @@ textarea {
   margin-top: 0.35rem;
 }
 
-footer {
-  margin-top: 1.5rem;
+.textarea-puml {
+  width: 100%;
+  min-height: 14rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
   font-size: 0.85rem;
-  color: #666;
+  line-height: 1.35;
+  resize: vertical;
+}
+
+.puml-preview-wrap {
+  margin-top: 0.75rem;
+}
+
+.diagram-preview {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #e1e4e8;
+  border-radius: 8px;
+  background: #fff;
 }

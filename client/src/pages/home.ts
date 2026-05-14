@@ -12,6 +12,7 @@ export function renderHome(root: HTMLElement): void {
           <li><a href="#/pdf-to-text">PDF → tekst</a></li>
           <li><a href="#/to-markdown">Plik → Markdown</a></li>
           <li><a href="#/markdown-to-docx">Markdown → DOCX</a></li>
+          <li><a href="#/plantuml">PlantUML → obraz</a></li>
         </ul>
       </section>
     `,

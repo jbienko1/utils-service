@@ -20,6 +20,12 @@ class Settings(BaseSettings):
         le=600,
         description="Timeout wywołania Pandoc (markdown → docx) w sekundach.",
     )
+    plantuml_timeout_sec: int = Field(
+        default=120,
+        ge=5,
+        le=600,
+        description="Timeout wywołania PlantUML (render diagramu) w sekundach.",
+    )
 
 
 @lru_cache

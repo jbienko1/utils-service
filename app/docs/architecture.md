@@ -7,6 +7,7 @@
 1. **PDF → tekst** — ekstrakcja tekstu z pliku PDF.
 2. **Plik → Markdown** — konwersja obsługiwanych formatów do Markdown za pomocą biblioteki Microsoft **markitdown**.
 3. **Markdown → DOCX** — konwersja `.md` / `.markdown` / `.txt` do dokumentu Word przez **Pandoc** (binarka w `PATH` lub w obrazie Docker).
+4. **PlantUML → obraz** — renderowanie diagramu do **SVG** lub **PNG** przez CLI **PlantUML** (JRE + zwykle **Graphviz**).
 
 Usługa jest **bezstanowa**: nie przechowuje trwale uploadów; przetwarzanie odbywa się na plikach tymczasowych usuwanych po żądaniu.
 
@@ -21,6 +22,7 @@ Usługa jest **bezstanowa**: nie przechowuje trwale uploadów; przetwarzanie odb
 | PDF (OCR) | [Tesseract](https://github.com/tesseract-ocr/tesseract) przez [pytesseract](https://github.com/madmaze/pytesseract); render stron do obrazu przez PyMuPDF + [Pillow](https://python-pillow.org/) |
 | Konwersja do Markdown | [markitdown](https://github.com/microsoft/markitdown) |
 | Markdown → DOCX | [Pandoc](https://pandoc.org/) (CLI, `subprocess`) |
+| PlantUML → obraz | [PlantUML](https://plantuml.com/) (CLI, `subprocess`; Graphviz dla wielu typów diagramów) |
 
 ## Widok logiczny (moduły)
 
@@ -31,6 +33,7 @@ flowchart TB
     r_pdf[api_v1_pdf]
     r_md[api_v1_markdown]
     r_docx[api_v1_md_docx]
+    r_puml[api_v1_plantuml]
   end
   subgraph core [Warstwa_rdzenia]
     cfg[core_config]
@@ -40,10 +43,12 @@ flowchart TB
     pdfx[services_pdf_extract]
     mdc[services_markitdown_convert]
     pandoc[services_md_to_docx]
+    puml[services_plantuml_render]
   end
   main --> r_pdf
   main --> r_md
   main --> r_docx
+  main --> r_puml
   r_pdf --> cfg
   r_pdf --> upl
   r_pdf --> pdfx
@@ -53,6 +58,9 @@ flowchart TB
   r_docx --> cfg
   r_docx --> upl
   r_docx --> pandoc
+  r_puml --> cfg
+  r_puml --> upl
+  r_puml --> puml
   r_pdf --> schemas[models_schemas]
   r_md --> schemas
 ```
@@ -65,11 +73,13 @@ flowchart TB
 | `app/api/v1/pdf.py` | `POST /v1/pdf-to-text` — upload PDF, parametr zapytania `ocr`. |
 | `app/api/v1/markdown.py` | `POST /v1/to-markdown` — upload pliku do konwersji. |
 | `app/api/v1/md_docx.py` | `POST /v1/markdown-to-docx` — upload `.md` / `.markdown` / `.txt`, odpowiedź binarna DOCX. |
-| `app/core/config.py` | `Settings`: limity, katalog temp, język i DPI OCR, próg trybu `auto`, timeout Pandoc. |
+| `app/api/v1/plantuml.py` | `POST /v1/plantuml-to-image` — upload źródła PlantUML, query `format`, odpowiedź SVG lub PNG. |
+| `app/core/config.py` | `Settings`: limity, katalog temp, język i DPI OCR, próg trybu `auto`, timeouty Pandoc i PlantUML. |
 | `app/core/uploads.py` | Zapis strumienia uploadu do pliku tymczasowego z limitem rozmiaru. |
 | `app/services/pdf_extract.py` | Ekstrakcja tekstu (natywnie / OCR / auto). |
 | `app/services/markitdown_convert.py` | Wywołanie `MarkItDown` na ścieżce pliku. |
 | `app/services/md_to_docx.py` | Wywołanie `pandoc` (wejście Markdown, wyjście DOCX w pamięci). |
+| `app/services/plantuml_render.py` | Wywołanie `plantuml` (wejście `.puml`, wyjście SVG/PNG w pamięci). |
 | `app/models/schemas.py` | Modele odpowiedzi JSON (`PdfToTextResponse`, `ToMarkdownResponse`). |
 
 ## Przepływ żądania (upload → odpowiedź)
@@ -100,8 +110,9 @@ sequenceDiagram
 | `POST /v1/pdf-to-text` | `multipart/form-data`: pole `file`; query `ocr`: `off` / `on` / `auto` | JSON: `text`, `page_count`, `used_ocr` |
 | `POST /v1/to-markdown` | `multipart/form-data`: pole `file` | JSON: `markdown`, `title` (opcjonalnie) |
 | `POST /v1/markdown-to-docx` | `multipart/form-data`: pole `file` (`.md`, `.markdown`, `.txt` lub odpowiedni `Content-Type`) | `200`: treść DOCX (`application/vnd.openxmlformats-officedocument.wordprocessingml.document`), nagłówek `Content-Disposition: attachment` |
+| `POST /v1/plantuml-to-image` | `multipart/form-data`: pole `file`; query `format`: `svg` / `png` | `200`: treść `image/svg+xml` lub `image/png` |
 
-Kody błędów typowe: `413` (przekroczony rozmiar), `415` (nie-PDF przy PDF lub niewłaściwy typ przy MD→DOCX), `422` (błąd konwersji markitdown), `503` (np. wymuszone OCR bez działającego Tesseract, lub brak/nie działa Pandoc przy MD→DOCX).
+Kody błędów typowe: `413` (przekroczony rozmiar), `415` (nie-PDF przy PDF lub niewłaściwy typ przy MD→DOCX / PlantUML), `422` (błąd konwersji markitdown lub błąd diagramu PlantUML), `503` (np. wymuszone OCR bez działającego Tesseract, brak Pandoc przy MD→DOCX, brak PlantUML w `PATH`).
 
 ## Logika PDF i OCR
 
@@ -116,11 +127,12 @@ Wszystkie zmienne mają prefiks **`UTILS_`** (patrz `Settings` w `app/core/confi
 - limit rozmiaru uploadu,
 - opcjonalny katalog plików tymczasowych,
 - parametry OCR (język, DPI, próg auto),
-- timeout Pandoc (`UTILS_PANDOC_TIMEOUT_SEC`).
+- timeout Pandoc (`UTILS_PANDOC_TIMEOUT_SEC`),
+- timeout PlantUML (`UTILS_PLANTUML_TIMEOUT_SEC`).
 
 ## Wdrożenie kontenerowe
 
-[Dockerfile](../../Dockerfile) bazuje na obrazie Python slim (Debian), instaluje m.in. **tesseract-ocr** (pakiety językowe eng/pol), **pandoc** (Markdown→DOCX) oraz **poppler-utils** (często wymagane lub pomocnicze przy łańcuchach konwersji dokumentów). Aplikacja startuje jako `uvicorn app.main:app` na porcie `8000`.
+[Dockerfile](../../Dockerfile) bazuje na obrazie Python slim (Debian), instaluje m.in. **tesseract-ocr** (pakiety językowe eng/pol), **pandoc** (Markdown→DOCX), **plantuml** i **graphviz** (render diagramów) oraz **poppler-utils** (często wymagane lub pomocnicze przy łańcuchach konwersji dokumentów). Aplikacja startuje jako `uvicorn app.main:app` na porcie `8000`.
 
 Instrukcja krok po kroku (build, run, porty): [install-and-run.md](install-and-run.md).
 
@@ -143,3 +155,4 @@ Prefiks wersjonowania API (`/v1`) pozwala w przyszłości wprowadzić `/v2` bez 
 
 - Brak uwierzytelniania w szkielecie — jeśli usługa jest publiczna, należy umieścić ją za reverse proxy z kontrolą dostępu / rate limitem.
 - Limity rozmiaru pliku ograniczają ryzyko wyczerpania pamięci; przy dużych PDF-ach OCR jest kosztowny obliczeniowo — warto monitorować timeouty i obciążenie CPU.
+- **PlantUML** — źródło diagramu może zawierać `!include` / `!import`; nie przetwarzaj niezaufanego tekstu na serwerze z dostępem do wrażliwych plików.

@@ -9,9 +9,12 @@ Dokument skrócony dla człowieka. Skrót w repozytorium: [README.md](../../READ
 | **Python 3.11+** | Zawsze |
 | **Tesseract OCR** (+ pakiety językowe) | Tylko jeśli używasz `ocr=on` lub `ocr=auto` na PDF |
 | **Pandoc** (w `PATH`) | Tylko dla `POST /v1/markdown-to-docx` |
-| **Docker** (opcjonalnie) | Uruchomienie w kontenerze zgodnym z [Dockerfile](../../Dockerfile); w obrazie są m.in. Tesseract (dla OCR) i Pandoc (dla MD→DOCX) — **nie musisz** używać Dockera, jeśli masz te narzędzia lokalnie |
+| **PlantUML** (CLI w `PATH`) + **Graphviz** (`dot`) | Tylko dla `POST /v1/plantuml-to-image` (Graphviz jest wymagany m.in. dla diagramów sekwencji i klas) |
+| **Docker** (opcjonalnie) | Uruchomienie w kontenerze zgodnym z [Dockerfile](../../Dockerfile); w obrazie są m.in. Tesseract, Pandoc, PlantUML i Graphviz — **nie musisz** używać Dockera, jeśli masz te narzędzia lokalnie |
 
 Na **Windows** Tesseract można zainstalować m.in. z [wikii UB Mannheim](https://github.com/UB-Mannheim/tesseract/wiki); upewnij się, że `tesseract` jest w `PATH` (lub skonfiguruj `pytesseract` — obecnie serwis zakłada domyślne wykrywanie binarki przez bibliotekę).
+
+**PlantUML na Windows:** instalatory (np. Chocolatey) często dodają `plantuml.cmd` / `plantuml.bat`. Serwis uruchamia je przez `cmd /c`, bo `CreateProcess` nie startuje plików wsadowych tak jak prawdziwego `.exe`. Po instalacji zrestartuj terminal / IDE, żeby `uvicorn` widział ten sam `PATH` co ręczne `plantuml -version`.
 
 ## Instalacja (środowisko wirtualne)
 
@@ -71,6 +74,7 @@ UTILS_MAX_UPLOAD_BYTES=20971520
 UTILS_OCR_LANG=eng+pol
 UTILS_OCR_DPI=200
 UTILS_PANDOC_TIMEOUT_SEC=120
+UTILS_PLANTUML_TIMEOUT_SEC=120
 UTILS_TEMP_DIR=C:\temp\utils-service
 ```
 
@@ -115,6 +119,7 @@ Dotyczy głównie **PDF + OCR** i limitów:
 
 - `UTILS_OCR_LANG`, `UTILS_OCR_DPI`, `UTILS_OCR_AUTO_CHARS_PER_PAGE_THRESHOLD` — sterują zachowaniem Tesseract i progiem trybu `auto`.
 - `UTILS_PANDOC_TIMEOUT_SEC` — limit czasu wywołania Pandoc przy `markdown-to-docx`.
+- `UTILS_PLANTUML_TIMEOUT_SEC` — limit czasu wywołania PlantUML przy `plantuml-to-image`.
 - `UTILS_MAX_UPLOAD_BYTES`, `UTILS_TEMP_DIR` — limity i miejsce zapisu uploadu.
 
 To są **parametry uruchomieniowe procesu** (jedna wartość na instancję serwera), a nie per-request — chyba że w przyszłości dodasz mapowanie nagłówków / kontekstu na ustawienia (obecnie nie ma).

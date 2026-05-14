@@ -9,7 +9,7 @@ Szczegóły dla agentów implementujących lub rozszerzających repozytorium.
 - **Core** (`app/core/`): konfiguracja globalna, helpery współdzielone (upload do temp).
 
 ```text
-HTTP  →  api/v1/*  →  services/*  →  biblioteki (fitz, markitdown, pytesseract, pandoc)
+HTTP  →  api/v1/*  →  services/*  →  biblioteki (fitz, markitdown, pytesseract, pandoc, plantuml)
               ↓
          core/config, core/uploads
 ```

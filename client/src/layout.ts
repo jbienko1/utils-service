@@ -3,6 +3,7 @@ const NAV: ReadonlyArray<{ path: string; href: string; label: string }> = [
   { path: "/pdf-to-text", href: "#/pdf-to-text", label: "PDF → tekst" },
   { path: "/to-markdown", href: "#/to-markdown", label: "Plik → Markdown" },
   { path: "/markdown-to-docx", href: "#/markdown-to-docx", label: "Markdown → DOCX" },
+  { path: "/plantuml", href: "#/plantuml", label: "PlantUML" },
 ];
 
 function navHtml(activePath: string): string {
@@ -18,7 +19,7 @@ export function appShell(activePath: string, mainHtml: string): string {
     <div class="wrap">
       <header>
         <h1>utils-service — klient WWW</h1>
-        <p>Prosty interfejs do usług REST (PDF, Markdown, DOCX).</p>
+        <p>Prosty interfejs do usług REST (PDF, Markdown, DOCX, PlantUML).</p>
         <div class="status">
           <span id="health-dot" class="dot" aria-hidden="true"></span>
           <span id="health-text">Nie sprawdzono</span>

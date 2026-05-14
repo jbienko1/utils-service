@@ -7,6 +7,8 @@ RUN apt-get update \
         tesseract-ocr-pol \
         poppler-utils \
         pandoc \
+        plantuml \
+        graphviz \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
