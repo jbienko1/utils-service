@@ -4,6 +4,7 @@ Lekka usługa **FastAPI** z małymi endpointami REST:
 
 - `POST /v1/pdf-to-text` — tekst z PDF (PyMuPDF); opcjonalnie **OCR** (Tesseract).
 - `POST /v1/to-markdown` — konwersja obsługiwanych typów plików do Markdown ([markitdown](https://github.com/microsoft/markitdown)).
+- `POST /v1/docx-to-markdown` — konwersja **DOCX** do Markdown (**Pandoc**; komentarze, track changes, opcjonalnie obrazy w ZIP).
 - `POST /v1/markdown-to-docx` — konwersja Markdown / tekstu do DOCX (**Pandoc**).
 - `POST /v1/plantuml-to-image` — wizualizacja diagramu **PlantUML** (SVG lub PNG).
 - `POST /v1/mermaid-to-image` — wizualizacja diagramu **Mermaid** przez **Mermaid CLI** (`mmdc`, SVG lub PNG).
@@ -19,7 +20,7 @@ Lekka usługa **FastAPI** z małymi endpointami REST:
 
 - Python **3.11+**
 - Do OCR: zainstalowany **Tesseract** oraz pakiety językowe zgodne z `UTILS_OCR_LANG` (np. na Windows instalator z [GitHub Tesseract](https://github.com/UB-Mannheim/tesseract/wiki); w Dockerze obraz instaluje `tesseract-ocr` + `eng` + `pol`).
-- Do **Markdown → DOCX:** zainstalowany [**Pandoc**](https://pandoc.org/installing.html) w `PATH` (w obrazie Docker `pandoc` jest dołączony w Dockerfile). **Docker nie jest obowiązkowy** — możesz pracować lokalnie z Pandoc + `uvicorn` tak jak z innymi narzędziami.
+- Do **Markdown → DOCX** i **DOCX → Markdown:** zainstalowany [**Pandoc**](https://pandoc.org/installing.html) w `PATH` (w obrazie Docker `pandoc` jest dołączony w Dockerfile). **Docker nie jest obowiązkowy** — możesz pracować lokalnie z Pandoc + `uvicorn` tak jak z innymi narzędziami.
 - Do **PlantUML → obraz:** w `PATH` muszą być **`plantuml`** (zwykle z JRE) oraz **`dot`** z pakietu **Graphviz** (w Dockerze instalowane w Dockerfile).
 - Do **Mermaid → obraz:** **Node.js** + zależności w [`mermaid-cli/`](mermaid-cli/) (`npm install` w tym katalogu) **albo** globalny `mmdc`; do renderu potrzebny jest **Chrome/Chromium** — przy deployu ustaw **`UTILS_PUPPETEER_EXECUTABLE_PATH`** (ścieżka do binarki). Bez tej zmiennej Puppeteer może próbować pobrać Chromium (niezalecane w kontenerze).
 
@@ -52,7 +53,9 @@ Dla **Mermaid** obraz zawiera `mmdc`, ale **nie** instaluje przeglądarki — po
 
 ## Klient WWW (`client/`)
 
-Osobna aplikacja Vite + TypeScript: nawigacja **hash** (`#/`, `#/pdf-to-text`, `#/to-markdown`, `#/markdown-to-docx`, `#/plantuml`, `#/mermaid`). Szczegóły: [client/docs/install-and-run.md](client/docs/install-and-run.md).
+Osobna aplikacja Vite + TypeScript: nawigacja **hash** (`#/`, `#/pdf-to-text`, `#/to-markdown`, `#/docx-to-markdown`, `#/markdown-to-docx`, `#/plantuml`, `#/mermaid`). Szczegóły: [client/docs/install-and-run.md](client/docs/install-and-run.md).
+
+Backend i front można też uruchamiać **osobno przez PM2** (`ecosystem.config.cjs` w root): `utils-api`, `utils-client-dev`, `utils-client-preview` — patrz [client/docs/install-and-run.md](client/docs/install-and-run.md#uruchamianie-przez-pm2-opcjonalnie) i [app/docs/install-and-run.md](app/docs/install-and-run.md).
 
 ## Endpointy (skrót)
 
@@ -66,6 +69,13 @@ Osobna aplikacja Vite + TypeScript: nawigacja **hash** (`#/`, `#/pdf-to-text`, `
 
 - Formularz: pole `file` — typ pliku zgodny z obsługą [**markitdown**](https://github.com/microsoft/markitdown) (m.in. PDF, DOCX, PPTX, HTML, obrazy z OCR itd.).
 - Odpowiedź: `200` — JSON: `markdown`, `title` (pole `title` bywa puste).
+
+### `POST /v1/docx-to-markdown`
+
+- Formularz: pole `file` — tylko `.docx`.
+- Query **`comments`**: `true` (domyślnie) — komentarze i redakcja (usunięcia jako `~~`); `false` — tekst końcowy bez redakcji.
+- Query **`extract_media`**: `false` (domyślnie); `true` — obrazy w `media/` + ZIP (base64) w JSON.
+- Odpowiedź: `200` — JSON: `markdown`, `title`, `media_count`, `media_zip_base64`.
 
 ### `POST /v1/markdown-to-docx`
 

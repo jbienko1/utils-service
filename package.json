@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "scripts": {
+    "pm2:api": "pm2 start ecosystem.config.cjs --only utils-api",
+    "pm2:client:dev": "pm2 start ecosystem.config.cjs --only utils-client-dev",
+    "pm2:client:preview": "pm2 start ecosystem.config.cjs --only utils-client-preview"
+  }
+}

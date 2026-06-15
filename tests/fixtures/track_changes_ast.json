@@ -1,0 +1,84 @@
+{
+  "pandoc-api-version": [1, 23, 1, 1],
+  "meta": {},
+  "blocks": [
+    {
+      "t": "Para",
+      "c": [
+        {"t": "Str", "c": "Before "},
+        {
+          "t": "Span",
+          "c": [
+            ["", ["insertion"], [["author", "Alice"], ["date", "2024-01-01T10:00:00Z"]]],
+            [{"t": "Str", "c": "added"}]
+          ]
+        },
+        {"t": "Str", "c": " after."}
+      ]
+    },
+    {
+      "t": "Para",
+      "c": [
+        {"t": "Str", "c": "Remove "},
+        {
+          "t": "Span",
+          "c": [
+            ["", ["deletion"], [["author", "Bob"], ["date", "2024-01-02T11:00:00Z"]]],
+            [{"t": "Str", "c": "old"}]
+          ]
+        },
+        {"t": "Str", "c": " word."}
+      ]
+    },
+    {
+      "t": "Para",
+      "c": [
+        {"t": "Str", "c": "I want "},
+        {
+          "t": "Span",
+          "c": [
+            ["", ["comment-start"], [["id", "0"], ["author", "Jan Kowalski"], ["date", "2024-05-09T16:13:00Z"]]],
+            [
+              {"t": "Str", "c": "My"},
+              {"t": "Space"},
+              {"t": "Str", "c": "comment."}
+            ]
+          ]
+        },
+        {"t": "Str", "c": "some"},
+        {"t": "Space"},
+        {"t": "Str", "c": "text"},
+        {"t": "Space"},
+        {"t": "Str", "c": "here"},
+        {
+          "t": "Span",
+          "c": [
+            ["", ["comment-end"], [["id", "0"]]],
+            []
+          ]
+        },
+        {"t": "Str", "c": "."}
+      ]
+    },
+    {
+      "t": "Para",
+      "c": [
+        {"t": "Str", "c": "Bold "},
+        {
+          "t": "Strong",
+          "c": [
+            {"t": "Str", "c": "important"},
+            {
+              "t": "Span",
+              "c": [
+                ["", ["deletion"], [["author", "Eve"], ["date", "2024-03-01T12:00:00Z"]]],
+                [{"t": "Str", "c": " removed"}]
+              ]
+            }
+          ]
+        },
+        {"t": "Str", "c": " text."}
+      ]
+    }
+  ]
+}

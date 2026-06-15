@@ -2,6 +2,7 @@ const NAV: ReadonlyArray<{ path: string; href: string; label: string }> = [
   { path: "/", href: "#/", label: "Start" },
   { path: "/pdf-to-text", href: "#/pdf-to-text", label: "PDF → tekst" },
   { path: "/to-markdown", href: "#/to-markdown", label: "Plik → Markdown" },
+  { path: "/docx-to-markdown", href: "#/docx-to-markdown", label: "DOCX → Markdown" },
   { path: "/markdown-to-docx", href: "#/markdown-to-docx", label: "Markdown → DOCX" },
   { path: "/plantuml", href: "#/plantuml", label: "PlantUML" },
   { path: "/mermaid", href: "#/mermaid", label: "Mermaid" },

@@ -4,19 +4,20 @@ import logging
 
 from fastapi import FastAPI
 
-from app.api.v1 import markdown, md_docx, mermaid, pdf, plantuml
+from app.api.v1 import docx_markdown, markdown, md_docx, mermaid, pdf, plantuml
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="utils-service",
-    description="Drobne usługi REST: PDF → tekst, pliki → Markdown, Markdown → DOCX (Pandoc), PlantUML / Mermaid → obraz.",
+    description="Drobne usługi REST: PDF → tekst, pliki → Markdown, DOCX → Markdown (Pandoc), Markdown → DOCX (Pandoc), PlantUML / Mermaid → obraz.",
     version="0.1.0",
 )
 
 app.include_router(pdf.router, prefix="/v1")
 app.include_router(markdown.router, prefix="/v1")
+app.include_router(docx_markdown.router, prefix="/v1")
 app.include_router(md_docx.router, prefix="/v1")
 app.include_router(plantuml.router, prefix="/v1")
 app.include_router(mermaid.router, prefix="/v1")

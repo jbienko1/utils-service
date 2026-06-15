@@ -57,6 +57,13 @@ Szczegółowa checklista (backend + klient + docs): [SERVICE_AND_CLIENT_PATTERN.
 - Owijka: `app/services/markitdown_convert.py` — `MarkItDown().convert(path)`.
 - Wynik: `DocumentConverterResult` — używamy `markdown` / `text_content` / `title`. Przy zmianie wersji biblioteki sprawdź atrybuty w runtime (test smoke).
 
+## DOCX → Markdown (Pandoc)
+
+- Router: `app/api/v1/docx_markdown.py` — tylko `.docx`; query `comments`, `extract_media`.
+- Serwis: `app/services/docx_to_markdown.py` — Pandoc DOCX → JSON AST → (opcjonalnie) `track_changes_postprocess` → GFM.
+- Post-processing (`comments=true`): wstawienia bez otoczki, usunięcia jako `Strikeout` (`~~` w GFM), komentarze Word jako `CodeBlock` tuż po skomentowanym fragmencie.
+- `extract_media=true`: `--extract-media=media`, ZIP z katalogiem `media/` w polu `media_zip_base64`.
+
 ## Klient WWW (`client/`)
 
 - **Stack:** Vite + TypeScript, brak Reacta; wejście [client/index.html](../client/index.html), logika [client/src/main.ts](../client/src/main.ts).

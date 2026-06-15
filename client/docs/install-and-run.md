@@ -1,6 +1,6 @@
 # Instalacja i uruchomienie — klient WWW
 
-Lekki front w katalogu nadrzędnym [client/](../): **Vite 6** + **TypeScript**, bez Reacta. Woła endpointy API: `/health`, `/v1/pdf-to-text`, `/v1/to-markdown`, `/v1/markdown-to-docx`, `/v1/plantuml-to-image`, `/v1/mermaid-to-image`. Nawigacja między usługami: **hash** (`#/`, `#/pdf-to-text`, itd.) — zobacz [../../docs/SERVICE_AND_CLIENT_PATTERN.md](../../docs/SERVICE_AND_CLIENT_PATTERN.md).
+Lekki front w katalogu nadrzędnym [client/](../): **Vite 6** + **TypeScript**, bez Reacta. Woła endpointy API: `/health`, `/v1/pdf-to-text`, `/v1/to-markdown`, `/v1/docx-to-markdown`, `/v1/markdown-to-docx`, `/v1/plantuml-to-image`, `/v1/mermaid-to-image`. Nawigacja między usługami: **hash** (`#/`, `#/pdf-to-text`, itd.) — zobacz [../../docs/SERVICE_AND_CLIENT_PATTERN.md](../../docs/SERVICE_AND_CLIENT_PATTERN.md).
 
 ## Wymagania
 
@@ -64,6 +64,79 @@ VITE_API_PROXY_TARGET=http://127.0.0.1:8000
 
 Inny host/port — gdy API nie nasłuchuje na domyślnym `127.0.0.1:8000`.
 
+## Uruchamianie przez PM2 (opcjonalnie)
+
+Zamiast dwóch terminali możesz zarządzać procesami przez [PM2](https://pm2.keymetrics.io/) — backend i front uruchamiasz **osobno**. Konfiguracja: [`ecosystem.config.cjs`](../../ecosystem.config.cjs) w root repozytorium.
+
+### Wymagania
+
+1. PM2 globalnie: `npm install -g pm2`
+2. Backend: `.venv` + `pip install -e .` (patrz [app/docs/install-and-run.md](../../app/docs/install-and-run.md))
+3. Front: `npm install` w katalogu `client/` (powyżej)
+
+### Backend (osobno)
+
+Z root repozytorium:
+
+```powershell
+pm2 start ecosystem.config.cjs --only utils-api
+# skrót: npm run pm2:api
+```
+
+API: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs), health: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health).
+
+### Front — tryb dev (osobno)
+
+```powershell
+pm2 start ecosystem.config.cjs --only utils-client-dev
+# skrót: npm run pm2:client:dev
+```
+
+UI: **http://127.0.0.1:5173** (proxy do API jak przy `npm run dev`).
+
+### Front — tryb preview (osobno)
+
+Najpierw zbuduj front:
+
+```powershell
+cd client
+npm run build
+cd ..
+```
+
+Potem:
+
+```powershell
+pm2 start ecosystem.config.cjs --only utils-client-preview
+# skrót: npm run pm2:client:preview
+```
+
+UI: **http://127.0.0.1:4173** (proxy jak przy `npm run preview`).
+
+### Tabela: aplikacja PM2 → URL
+
+| Aplikacja PM2 | Port | Adres w przeglądarce |
+|---------------|------|----------------------|
+| `utils-api` | 8000 | API / Swagger — nie interfejs WWW |
+| `utils-client-dev` | 5173 | http://127.0.0.1:5173 |
+| `utils-client-preview` | 4173 | http://127.0.0.1:4173 |
+
+Backend musi działać (`utils-api`), zanim front połączy się z `/health` i `/v1`.
+
+### Przydatne komendy PM2
+
+```powershell
+pm2 status
+pm2 logs utils-client-dev
+pm2 restart utils-api
+pm2 stop utils-api
+pm2 delete utils-client-dev
+```
+
+Logi procesów trafiają do `logs/pm2/` (katalog ignorowany przez git).
+
+Przy niestandardowym hoście API ustaw `VITE_API_PROXY_TARGET` w `client/.env` i zrestartuj proces frontu (`pm2 restart utils-client-dev` lub `utils-client-preview`).
+
 ## Build i podgląd produkcyjny lokalnie
 
 ```powershell
@@ -84,7 +157,7 @@ Po `npm run build` katalog `client/dist/` zawiera pliki statyczne. Same `file://
 ## Funkcje interfejsu
 
 - Przycisk / automatyczne sprawdzenie **`GET /health`**
-- Formularz **PDF → tekst** (`POST /v1/pdf-to-text`, query `ocr`) oraz **plik → Markdown** (`POST /v1/to-markdown`)
+- Formularz **PDF → tekst** (`POST /v1/pdf-to-text`, query `ocr`), **plik → Markdown** (`POST /v1/to-markdown`) oraz **DOCX → Markdown** (`POST /v1/docx-to-markdown`, query `comments`, `extract_media`)
 - **Wybór pliku:** standardowy przycisk systemowy oraz **strefa przeciągnij-i-upuść** (PDF tylko pliki `.pdf` / typ `application/pdf`)
 - **Kopiuj:** zapis treści pola wyniku do schowka (`navigator.clipboard`) — wymaga zwykle **HTTPS** lub **`localhost`**; przy braku uprawnień pojawi się podpowiedź (można skopiować ręcznie z pola)
 - **Zwiń / pokaż odpowiedź:** zwijanie bloku z polem tekstowym wyniku (treść pozostaje w polu; „Kopiuj” nadal kopiuje aktualną zawartość)

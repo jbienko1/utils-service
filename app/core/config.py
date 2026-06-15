@@ -18,7 +18,7 @@ class Settings(BaseSettings):
         default=120,
         ge=5,
         le=600,
-        description="Timeout wywołania Pandoc (markdown → docx) w sekundach.",
+        description="Timeout wywołania Pandoc (markdown → docx, docx → markdown) w sekundach.",
     )
     plantuml_timeout_sec: int = Field(
         default=120,

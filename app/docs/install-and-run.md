@@ -8,7 +8,7 @@ Dokument skrócony dla człowieka. Skrót w repozytorium: [README.md](../../READ
 |----------|------------------|
 | **Python 3.11+** | Zawsze |
 | **Tesseract OCR** (+ pakiety językowe) | Tylko jeśli używasz `ocr=on` lub `ocr=auto` na PDF |
-| **Pandoc** (w `PATH`) | Tylko dla `POST /v1/markdown-to-docx` |
+| **Pandoc** (w `PATH`) | `POST /v1/markdown-to-docx`, `POST /v1/docx-to-markdown` |
 | **PlantUML** (CLI w `PATH`) + **Graphviz** (`dot`) | Tylko dla `POST /v1/plantuml-to-image` (Graphviz jest wymagany m.in. dla diagramów sekwencji i klas) |
 | **Node.js + npm** oraz **Mermaid CLI** (`mmdc`) | Tylko dla `POST /v1/mermaid-to-image` — zależności w katalogu [`mermaid-cli/`](../../mermaid-cli/) (`npm install` / w Dockerze `npm ci`) |
 | **Chrome / Chromium** (ścieżka w `UTILS_PUPPETEER_EXECUTABLE_PATH`) | Dla Mermaid: Puppeteer w `mmdc` — **obowiązkowe przy typowym deployu** (obraz Docker nie dołącza przeglądarki; ustaw ścieżkę przy `docker run` / w compose) |
@@ -78,6 +78,19 @@ Dlaczego `python -m uvicorn`: skrypt `uvicorn.exe` często trafia do `Scripts` p
 | [http://127.0.0.1:8000/openapi.json](http://127.0.0.1:8000/openapi.json) | Specyfikacja OpenAPI (JSON) |
 | [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health) | Szybki test liveness |
 
+## Uruchamianie przez PM2 (opcjonalnie)
+
+Alternatywa dla ręcznego `python -m uvicorn ...` — proces **`utils-api`** w [`ecosystem.config.cjs`](../../ecosystem.config.cjs). Front uruchamiasz osobno (`utils-client-dev` lub `utils-client-preview`); szczegóły: [client/docs/install-and-run.md](../../client/docs/install-and-run.md).
+
+Wymagania: zainstalowany [PM2](https://pm2.keymetrics.io/) (`npm install -g pm2`), utworzone `.venv` i `pip install -e .` w root repozytorium.
+
+```powershell
+pm2 start ecosystem.config.cjs --only utils-api
+# skrót z root: npm run pm2:api
+```
+
+PM2 uruchamia `.venv/Scripts/python.exe` (Windows) lub `.venv/bin/python` (Linux/macOS) z `-m uvicorn app.main:app --host 127.0.0.1 --port 8000` — **bez** `--reload` (restart: `pm2 restart utils-api`). Katalog roboczy procesu to root repozytorium (musi zawierać `pyproject.toml` i pakiet `app/`).
+
 ## Konfiguracja przez plik `.env` (opcjonalnie)
 
 W katalogu głównym projektu możesz utworzyć plik `.env` (nie commituj go). `Settings` ładuje go automatycznie — prefiks zmiennych: **`UTILS_`**.
@@ -129,6 +142,7 @@ Pytanie brzmi zwykle: **czy biblioteki pod spodem da się „stroić”**, i **c
 |----------|---------------------|
 | `POST /v1/pdf-to-text` | **`ocr`**: `off` / `on` / `auto` — wybór ścieżki natywnej vs OCR oraz heurystyki auto. |
 | `POST /v1/to-markdown` | Tylko **plik** — brak dodatkowych query/body pod markitdown (uproszczenie kontraktu). |
+| `POST /v1/docx-to-markdown` | **`comments`**: `true` / `false` (domyślnie `true`); **`extract_media`**: `true` / `false` (domyślnie `false`). |
 | `POST /v1/mermaid-to-image` | **Plik** + query **`format`**: `svg` / `png`; render przez `mmdc` (Puppeteer — ścieżka Chrome z `UTILS_PUPPETEER_EXECUTABLE_PATH`). |
 
 ### Poziom serwera (`UTILS_*` w `Settings`)
@@ -136,7 +150,7 @@ Pytanie brzmi zwykle: **czy biblioteki pod spodem da się „stroić”**, i **c
 Dotyczy głównie **PDF + OCR** i limitów:
 
 - `UTILS_OCR_LANG`, `UTILS_OCR_DPI`, `UTILS_OCR_AUTO_CHARS_PER_PAGE_THRESHOLD` — sterują zachowaniem Tesseract i progiem trybu `auto`.
-- `UTILS_PANDOC_TIMEOUT_SEC` — limit czasu wywołania Pandoc przy `markdown-to-docx`.
+- `UTILS_PANDOC_TIMEOUT_SEC` — limit czasu wywołania Pandoc przy `markdown-to-docx` i `docx-to-markdown`.
 - `UTILS_PLANTUML_TIMEOUT_SEC` — limit czasu wywołania PlantUML przy `plantuml-to-image`.
 - `UTILS_MERMAID_TIMEOUT_SEC` — limit czasu wywołania Mermaid CLI przy `mermaid-to-image`.
 - `UTILS_PUPPETEER_EXECUTABLE_PATH` — ścieżka do Chrome/Chromium dla Puppeteer (`mmdc`); przy deployu zwykle **wymagana** w Dockerze (obraz bazowy nie instaluje przeglądarki).

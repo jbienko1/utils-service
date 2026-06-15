@@ -1,3 +1,4 @@
+import { renderDocxToMarkdownPage } from "./pages/docx-to-markdown";
 import { renderHome } from "./pages/home";
 import { renderMarkdownToDocxPage } from "./pages/markdown-to-docx";
 import { cleanupMermaidPreview, renderMermaidPage } from "./pages/mermaid";
@@ -10,6 +11,7 @@ const TITLES: Readonly<Record<string, string>> = {
   "/": "utils-service — klient WWW",
   "/pdf-to-text": "PDF → tekst — utils-service",
   "/to-markdown": "Plik → Markdown — utils-service",
+  "/docx-to-markdown": "DOCX → Markdown — utils-service",
   "/markdown-to-docx": "Markdown → DOCX — utils-service",
   "/plantuml": "PlantUML — utils-service",
   "/mermaid": "Mermaid — utils-service",
@@ -36,6 +38,9 @@ function renderRoute(): void {
       break;
     case "/to-markdown":
       renderToMarkdownPage(root);
+      break;
+    case "/docx-to-markdown":
+      renderDocxToMarkdownPage(root);
       break;
     case "/markdown-to-docx":
       renderMarkdownToDocxPage(root);
