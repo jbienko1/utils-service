@@ -137,6 +137,53 @@ Logi procesów trafiają do `logs/pm2/` (katalog ignorowany przez git).
 
 Przy niestandardowym hoście API ustaw `VITE_API_PROXY_TARGET` w `client/.env` i zrestartuj proces frontu (`pm2 restart utils-client-dev` lub `utils-client-preview`).
 
+## Dostęp przez reverse proxy (publiczna domena)
+
+Gdy front (`npm run dev`, `npm run preview` lub PM2) stoi za nginx / Cloudflare i otwierasz go spod publicznej domeny (np. `https://example.allowedhosts.dev`), Vite 6 może zwrócić:
+
+> Blocked request. This host ("example.allowedhosts.dev") is not allowed.
+
+To zabezpieczenie Vite: nagłówek `Host` z reverse proxy musi być na liście dozwolonych hostów. Są **dwa sposoby** — wystarczy jeden.
+
+### Sposób 1: `allowedHosts` w `vite.config.ts`
+
+W [`client/vite.config.ts`](../vite.config.ts) dodaj domenę w sekcji `server` (tryb dev) i opcjonalnie `preview`:
+
+```typescript
+server: {
+  port: 5173,
+  allowedHosts: ["example.allowedhosts.dev"],
+  // ...
+},
+preview: {
+  port: 4173,
+  allowedHosts: ["example.allowedhosts.dev"],
+  // ...
+},
+```
+
+Suffix subdomen: wpis `.allowedhosts.dev` pozwala na `example.allowedhosts.dev`, `foo.allowedhosts.dev` itd.
+
+### Sposób 2: zmienna środowiskowa (bez edycji `vite.config.ts`)
+
+Vite 6 umożliwia dodanie hostów przez env — wygodne na serwerze, gdy domena nie powinna trafić do repozytorium.
+
+W `client/.env` (patrz [`.env.example`](../.env.example)):
+
+```env
+__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=example.allowedhosts.dev
+```
+
+Wiele hostów oddziel przecinkami: `host1.example.com,host2.example.com`.
+
+Po zmianie zrestartuj front: `pm2 restart utils-client-dev` (lub `utils-client-preview`).
+
+### Weryfikacja
+
+- Strona ładuje się bez „Blocked request”.
+- W UI działa **`GET /health`** (proxy Vite → FastAPI na `VITE_API_PROXY_TARGET`).
+- Backend (`utils-api`) musi działać równolegle; `VITE_API_PROXY_TARGET` zwykle pozostaje `http://127.0.0.1:8000`.
+
 ## Build i podgląd produkcyjny lokalnie
 
 ```powershell
@@ -170,3 +217,4 @@ Po `npm run build` katalog `client/dist/` zawiera pliki statyczne. Same `file://
 | 502 / „connection refused” w konsoli sieci | Backend wyłączony lub zły port w `VITE_API_PROXY_TARGET`. |
 | Po `build` brak działania na zwykłym hostingu plików | Brak reverse proxy lub CORS — patrz sekcja „Hosting statyczny”. |
 | Schowek / „Kopiuj” nie działa | Czy strona jest na `localhost` lub HTTPS; w niektórych przeglądarkach trzeba zezwolić na dostęp do schowka. |
+| „Blocked request. This host … is not allowed” | Domena spoza `localhost` — patrz sekcja [Dostęp przez reverse proxy](#dostęp-przez-reverse-proxy-publiczna-domena): `allowedHosts` w `vite.config.ts` **lub** `__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS` w `client/.env`. |
