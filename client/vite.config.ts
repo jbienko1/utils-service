@@ -7,6 +7,7 @@ export default defineConfig(({ mode }) => {
   return {
     server: {
       port: 5173,
+      allowedHosts: ["example.allowedhost.dev"],
       proxy: {
         "/v1": { target, changeOrigin: true },
         "/health": { target, changeOrigin: true },
@@ -14,6 +15,7 @@ export default defineConfig(({ mode }) => {
     },
     preview: {
       port: 4173,
+      allowedHosts: ["example.allowedhost.dev"],
       proxy: {
         "/v1": { target, changeOrigin: true },
         "/health": { target, changeOrigin: true },
