@@ -71,12 +71,12 @@ Dlaczego `python -m uvicorn`: skrypt `uvicorn.exe` często trafia do `Scripts` p
 
 **Adresy po starcie:**
 
-| URL | Opis |
-|-----|------|
-| [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) | Swagger UI (OpenAPI) |
-| [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc) | ReDoc |
+| URL                                                                      | Opis                        |
+| ------------------------------------------------------------------------ | --------------------------- |
+| [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)                 | Swagger UI (OpenAPI)        |
+| [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)               | ReDoc                       |
 | [http://127.0.0.1:8000/openapi.json](http://127.0.0.1:8000/openapi.json) | Specyfikacja OpenAPI (JSON) |
-| [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health) | Szybki test liveness |
+| [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)             | Szybki test liveness        |
 
 ## Uruchamianie przez PM2 (opcjonalnie)
 

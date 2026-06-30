@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from pathlib import Path
 from typing import Annotated, Literal
@@ -41,7 +42,9 @@ async def pdf_to_text(
     try:
         path = await save_upload_to_temp(file, settings, suffix=".pdf")
         try:
-            text, page_count, used_ocr = pdf_extract.extract_pdf_text(path, settings, ocr=ocr)
+            text, page_count, used_ocr = await asyncio.to_thread(
+                pdf_extract.extract_pdf_text, path, settings, ocr
+            )
         except RuntimeError as e:
             raise HTTPException(status_code=503, detail=str(e)) from e
         return PdfToTextResponse(text=text, page_count=page_count, used_ocr=used_ocr)

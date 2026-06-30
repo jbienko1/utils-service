@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -7,7 +8,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import Response
 
 from app.core.config import Settings, get_settings
-from app.core.uploads import save_upload_to_temp
+from app.core.uploads import save_upload_to_temp, suffix_from_upload
 from app.services.mermaid_render import MermaidSourceError, render_mermaid_path
 
 router = APIRouter(tags=["mermaid"])
@@ -48,12 +49,14 @@ async def mermaid_to_image_endpoint(
 
     path: Path | None = None
     try:
-        suffix = Path(file.filename or "diagram.mmd").suffix.lower()
-        if suffix not in (".mmd", ".mermaid", ".md", ".txt", ""):
-            suffix = ".mmd"
-        path = await save_upload_to_temp(file, settings, suffix=suffix or ".mmd")
+        suffix = suffix_from_upload(
+            file,
+            frozenset({".mmd", ".mermaid", ".md", ".txt"}),
+            default=".mmd",
+        )
+        path = await save_upload_to_temp(file, settings, suffix=suffix)
         try:
-            image_bytes = render_mermaid_path(path, settings, image_format)
+            image_bytes = await asyncio.to_thread(render_mermaid_path, path, settings, image_format)
         except MermaidSourceError as e:
             raise HTTPException(status_code=422, detail=e.message) from e
         except RuntimeError as e:

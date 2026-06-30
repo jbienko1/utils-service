@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from pathlib import Path
 from typing import Annotated
@@ -23,9 +24,12 @@ _DOCX_CONTENT_TYPES = frozenset(
 )
 
 
-def _is_docx_upload(file: UploadFile) -> bool:
-    name = (file.filename or "").lower()
-    return name.endswith(".docx")
+def _is_valid_docx_upload(file: UploadFile) -> bool:
+    """Akceptuje upload jeśli nazwa kończy się .docx i content-type jest znany lub nieobecny."""
+    if not (file.filename or "").lower().endswith(".docx"):
+        return False
+    ct = (file.content_type or "").lower()
+    return not ct or ct in _DOCX_CONTENT_TYPES
 
 
 @router.post("/docx-to-markdown", response_model=DocxToMarkdownResponse)
@@ -44,23 +48,18 @@ async def docx_to_markdown(
         Query(description="true: wyciągnij obrazy do media/ i zwróć ZIP (base64) w odpowiedzi."),
     ] = False,
 ) -> DocxToMarkdownResponse:
-    if file.content_type and file.content_type not in _DOCX_CONTENT_TYPES:
-        if not _is_docx_upload(file):
-            raise HTTPException(
-                status_code=415,
-                detail="Oczekiwany plik .docx (application/vnd.openxmlformats-officedocument.wordprocessingml.document).",
-            )
-    elif not _is_docx_upload(file):
+    if not _is_valid_docx_upload(file):
         raise HTTPException(
             status_code=415,
-            detail="Oczekiwany plik .docx.",
+            detail="Oczekiwany plik .docx (application/vnd.openxmlformats-officedocument.wordprocessingml.document).",
         )
 
     path: Path | None = None
     try:
         path = await save_upload_to_temp(file, settings, suffix=".docx")
         try:
-            result = convert_docx_to_markdown(
+            result = await asyncio.to_thread(
+                convert_docx_to_markdown,
                 path,
                 settings,
                 comments=comments,

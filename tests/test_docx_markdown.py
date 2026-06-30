@@ -6,6 +6,7 @@ import tempfile
 import zipfile
 from io import BytesIO
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -308,3 +309,77 @@ def test_zip_media_dir_structure() -> None:
         (media / "img.png").unlink(missing_ok=True)
         media.rmdir()
         tmp.rmdir()
+
+
+# --- testy walidacji content-type (_is_valid_docx_upload) ---
+
+from app.api.v1.docx_markdown import _is_valid_docx_upload  # noqa: E402
+
+
+def _mock_upload(filename: str, content_type: str | None) -> MagicMock:
+    f = MagicMock()
+    f.filename = filename
+    f.content_type = content_type
+    return f
+
+
+def test_valid_docx_upload_correct_ct() -> None:
+    f = _mock_upload(
+        "doc.docx",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
+    assert _is_valid_docx_upload(f) is True
+
+
+def test_valid_docx_upload_octet_stream() -> None:
+    f = _mock_upload("doc.docx", "application/octet-stream")
+    assert _is_valid_docx_upload(f) is True
+
+
+def test_valid_docx_upload_no_content_type() -> None:
+    f = _mock_upload("doc.docx", None)
+    assert _is_valid_docx_upload(f) is True
+
+
+def test_valid_docx_upload_empty_content_type() -> None:
+    f = _mock_upload("doc.docx", "")
+    assert _is_valid_docx_upload(f) is True
+
+
+def test_invalid_docx_upload_wrong_extension() -> None:
+    f = _mock_upload(
+        "doc.pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
+    assert _is_valid_docx_upload(f) is False
+
+
+def test_invalid_docx_upload_wrong_ct_and_wrong_ext() -> None:
+    f = _mock_upload("doc.md", "text/markdown")
+    assert _is_valid_docx_upload(f) is False
+
+
+def test_invalid_docx_upload_wrong_ct_correct_ext() -> None:
+    # content-type niezgodny z listą dozwolonych → odrzucamy
+    f = _mock_upload("doc.docx", "text/plain")
+    assert _is_valid_docx_upload(f) is False
+
+
+def test_valid_docx_upload_rejects_non_docx_via_api() -> None:
+    client = TestClient(app)
+    res = client.post(
+        "/v1/docx-to-markdown",
+        files={"file": ("report.pdf", b"%PDF", "application/pdf")},
+    )
+    assert res.status_code == 415
+
+
+def test_valid_docx_upload_accepts_no_ct_via_api() -> None:
+    """Klient bez Content-Type (octet-stream) z poprawną nazwą .docx → nie powinien dostać 415
+    (dostanie 503/422 bo brak pandoca lub błąd konwersji, ale nie 415)."""
+    client = TestClient(app)
+    res = client.post(
+        "/v1/docx-to-markdown",
+        files={"file": ("doc.docx", b"PK\x03\x04", "application/octet-stream")},
+    )
+    assert res.status_code != 415

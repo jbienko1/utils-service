@@ -7,6 +7,9 @@ from markitdown import MarkItDown
 
 logger = logging.getLogger(__name__)
 
+# Konstruktor MarkItDown nie jest thread-safe (mutowalny stan wewnętrzny, requests.Session),
+# dlatego tworzymy nową instancję per wywołanie zamiast singletona.
+
 
 def convert_file_to_markdown(path: Path) -> tuple[str, str | None]:
     md = MarkItDown()

@@ -23,8 +23,10 @@ def convert_markdown_path_to_docx(path: Path, settings: Settings) -> bytes:
             "lub użyj obrazu Docker z zainstalowanym pandoc."
         )
 
-    base_dir = path.parent
-    fd_out, out_raw = tempfile.mkstemp(suffix=".docx", dir=base_dir)
+    out_dir = settings.temp_dir
+    if out_dir is not None:
+        out_dir.mkdir(parents=True, exist_ok=True)
+    fd_out, out_raw = tempfile.mkstemp(suffix=".docx", dir=out_dir)
     os.close(fd_out)
     out_path = Path(out_raw)
     try:

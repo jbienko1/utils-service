@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import re
+import asyncio
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import Response
 
 from app.core.config import Settings, get_settings
-from app.core.uploads import save_upload_to_temp
+from app.core.uploads import save_upload_to_temp, suffix_from_upload
 from app.services.plantuml_render import PlantumlSourceError, render_plantuml_path
 
 router = APIRouter(tags=["plantuml"])
@@ -49,12 +49,14 @@ async def plantuml_to_image_endpoint(
 
     path: Path | None = None
     try:
-        suffix = Path(file.filename or "diagram.puml").suffix.lower()
-        if suffix not in (".puml", ".plantuml", ".pu", ".txt", ".iuml", ""):
-            suffix = ".puml"
-        path = await save_upload_to_temp(file, settings, suffix=suffix or ".puml")
+        suffix = suffix_from_upload(
+            file,
+            frozenset({".puml", ".plantuml", ".pu", ".txt", ".iuml"}),
+            default=".puml",
+        )
+        path = await save_upload_to_temp(file, settings, suffix=suffix)
         try:
-            image_bytes = render_plantuml_path(path, settings, image_format)
+            image_bytes = await asyncio.to_thread(render_plantuml_path, path, settings, image_format)
         except PlantumlSourceError as e:
             raise HTTPException(status_code=422, detail=e.message) from e
         except RuntimeError as e:

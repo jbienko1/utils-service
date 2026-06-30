@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import re
 from pathlib import Path
 from typing import Annotated
@@ -9,7 +10,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import Response
 
 from app.core.config import Settings, get_settings
-from app.core.uploads import save_upload_to_temp
+from app.core.uploads import save_upload_to_temp, suffix_from_upload
 from app.services.md_to_docx import convert_markdown_path_to_docx
 
 router = APIRouter(tags=["markdown-docx"])
@@ -68,12 +69,14 @@ async def markdown_to_docx_endpoint(
 
     path: Path | None = None
     try:
-        suffix = Path(file.filename or "upload.md").suffix.lower()
-        if suffix not in (".md", ".markdown", ".txt", ""):
-            suffix = ".md"
-        path = await save_upload_to_temp(file, settings, suffix=suffix or ".md")
+        suffix = suffix_from_upload(
+            file,
+            frozenset({".md", ".markdown", ".txt"}),
+            default=".md",
+        )
+        path = await save_upload_to_temp(file, settings, suffix=suffix)
         try:
-            docx_bytes = convert_markdown_path_to_docx(path, settings)
+            docx_bytes = await asyncio.to_thread(convert_markdown_path_to_docx, path, settings)
         except RuntimeError as e:
             raise HTTPException(status_code=503, detail=str(e)) from e
         out_name = _safe_download_filename(file.filename)
