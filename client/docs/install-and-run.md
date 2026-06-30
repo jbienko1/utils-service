@@ -184,7 +184,137 @@ Po zmianie zrestartuj front: `pm2 restart utils-client-dev` (lub `utils-client-p
 - W UI działa **`GET /health`** (proxy Vite → FastAPI na `VITE_API_PROXY_TARGET`).
 - Backend (`utils-api`) musi działać równolegle; `VITE_API_PROXY_TARGET` zwykle pozostaje `http://127.0.0.1:8000`.
 
+## Produkcja (zamiast `npm run dev`)
+
+Na serwerze publicznym **nie używaj** `npm run dev` ani PM2 `utils-client-dev` — to tryb deweloperski (HMR, brak minifikacji, dodatkowe zabezpieczenia Vite jak `allowedHosts`).
+
+Front woła **względne** ścieżki (`/health`, `/v1/...`). W produkcji ten sam host publiczny serwuje statykę z `dist/` i przekazuje API do FastAPI — bez zmian w kodzie TypeScript.
+
+### Porównanie trybów
+
+| Tryb | Komenda / PM2 | Port | Produkcja? |
+|------|---------------|------|------------|
+| **Dev** | `npm run dev` / `utils-client-dev` | 5173 | Nie — tylko lokalnie |
+| **Preview** | `npm run preview` / `utils-client-preview` | 4173 | Tylko test po `build`; Vite **nie zaleca** na stałe |
+| **Statyka + reverse proxy** | `npm run build` → nginx serwuje `client/dist/` | 443/80 | **Tak — zalecane** |
+
+```mermaid
+flowchart LR
+  browser[Przeglądarka]
+  proxy[Reverse_proxy]
+  static[client_dist]
+  api[FastAPI_8000]
+
+  browser --> proxy
+  proxy -->|"/"| static
+  proxy -->|"/v1 /health"| api
+```
+
+### Kroki na serwerze (zalecany wariant)
+
+#### 1. Zbuduj front
+
+Po każdej zmianie UI (oraz przy pierwszym wdrożeniu):
+
+```powershell
+cd client
+npm install
+npm run build
+```
+
+Wynik: katalog [`client/dist/`](../dist/) — zminifikowany HTML, JS, CSS. Po `build` **Node.js nie jest potrzebny** do serwowania frontu (wystarczy nginx + Python/API).
+
+#### 2. Zatrzymaj tryb dev
+
+Jeśli wcześniej działał Vite dev:
+
+```powershell
+pm2 stop utils-client-dev
+pm2 delete utils-client-dev   # opcjonalnie
+```
+
+Nie potrzebujesz już procesu Vite ani konfiguracji `allowedHosts` z sekcji [Dostęp przez reverse proxy](#dostęp-przez-reverse-proxy-publiczna-domena).
+
+#### 3. Backend — PM2 `utils-api`
+
+Konfiguracja w [`ecosystem.config.cjs`](../../ecosystem.config.cjs) jest już produkcyjna (brak `--reload`):
+
+```powershell
+pm2 start ecosystem.config.cjs --only utils-api
+# skrót: npm run pm2:api
+```
+
+Sprawdzenie: `pm2 status`, `curl http://127.0.0.1:8000/health`.
+
+#### 4. Reverse proxy (nginx)
+
+**Zasada:** jedna domena publiczna — `/` z plików w `dist/`, `/v1` i `/health` → FastAPI na `127.0.0.1:8000`.
+
+Przykład (dostosuj ścieżki i certyfikat SSL):
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name example.allowedhosts.dev;
+
+    root /ścieżka/do/utils-service/client/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /v1/ {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        client_max_body_size 20m;   # zgodnie z UTILS_MAX_UPLOAD_BYTES
+    }
+
+    location = /health {
+        proxy_pass http://127.0.0.1:8000;
+    }
+}
+```
+
+Po zmianie: `nginx -t && nginx -s reload`.
+
+**Cloudflare** (lub inny CDN) — zwykle tylko DNS i SSL; routing `/` vs `/v1` konfigurujesz na nginx/Caddy/Traefik **za** CDN.
+
+**HTTPS:** wymagany m.in. dla przycisku „Kopiuj” w UI (`navigator.clipboard`).
+
+Alternatywa przy **osobnych domenach** frontu i API: CORS na backendzie — wtedy front musiałby wołać pełny URL API (obecny kod tego nie robi).
+
+#### 5. Weryfikacja
+
+- `https://twoja-domena` — UI bez Vite i bez „Blocked request”
+- `https://twoja-domena/health` → `{"status":"ok"}`
+- W UI: status API OK, konwersja pliku działa
+
+### Wariant pośredni: `vite preview`
+
+Do szybkiego testu po `build` (lokalnie lub na serwerze), zanim skonfigurujesz nginx:
+
+```powershell
+cd client
+npm run build
+npm run preview          # port 4173
+# lub PM2:
+pm2 start ecosystem.config.cjs --only utils-client-preview
+```
+
+Proxy do API nadal z [`vite.config.ts`](../vite.config.ts) — mniej zmian w nginx, ale dodatkowy proces Node i [ograniczenia Vite preview](https://vite.dev/guide/cli#vite-preview). Za reverse proxy z publiczną domeną nadal może być potrzebne `allowedHosts` (patrz sekcja wyżej).
+
+### Aktualizacja po zmianach w kodzie
+
+| Co się zmieniło | Co zrobić |
+|-----------------|-----------|
+| Tylko front (UI) | `cd client && npm run build` — nginx od razu serwuje nowy `dist/` |
+| Tylko backend | `pm2 restart utils-api` |
+| Front i backend | `npm run build` + `pm2 restart utils-api` |
+
 ## Build i podgląd produkcyjny lokalnie
+
+Skrót do testu buildu na maszynie deweloperskiej (szczegóły produkcyjne: sekcja [Produkcja](#produkcja-zamiast-npm-run-dev) powyżej):
 
 ```powershell
 cd client
@@ -193,13 +323,6 @@ npm run preview
 ```
 
 `preview` używa tego samego proxy co `dev` (patrz `vite.config.ts`).
-
-## Hosting statyczny (`dist/`)
-
-Po `npm run build` katalog `client/dist/` zawiera pliki statyczne. Same `file://` lub hosting bez proxy **nie** przekierują `/v1` na FastAPI — wtedy:
-
-- **nginx (lub podobny):** ten sam host — `/` → pliki z `dist/`, ścieżki `/v1` i `/health` → upstream do FastAPI; **albo**
-- **CORS** na backendzie dla domeny frontu (gdy front i API są na różnych originach).
 
 ## Funkcje interfejsu
 
@@ -215,6 +338,6 @@ Po `npm run build` katalog `client/dist/` zawiera pliki statyczne. Same `file://
 |--------|----------------|
 | „API nieosiągalne” / błąd `/health` | Czy uvicorn działa na `VITE_API_PROXY_TARGET`; czy `.env` w `client/` jest poprawny (wymaga restartu `npm run dev`). |
 | 502 / „connection refused” w konsoli sieci | Backend wyłączony lub zły port w `VITE_API_PROXY_TARGET`. |
-| Po `build` brak działania na zwykłym hostingu plików | Brak reverse proxy lub CORS — patrz sekcja „Hosting statyczny”. |
+| Po `build` brak działania na zwykłym hostingu plików | Brak reverse proxy — patrz [Produkcja (zamiast npm run dev)](#produkcja-zamiast-npm-run-dev). |
 | Schowek / „Kopiuj” nie działa | Czy strona jest na `localhost` lub HTTPS; w niektórych przeglądarkach trzeba zezwolić na dostęp do schowka. |
 | „Blocked request. This host … is not allowed” | Domena spoza `localhost` — patrz sekcja [Dostęp przez reverse proxy](#dostęp-przez-reverse-proxy-publiczna-domena): `allowedHosts` w `vite.config.ts` **lub** `__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS` w `client/.env`. |

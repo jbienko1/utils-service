@@ -55,7 +55,7 @@ Dla **Mermaid** obraz zawiera `mmdc`, ale **nie** instaluje przeglądarki — po
 
 Osobna aplikacja Vite + TypeScript: nawigacja **hash** (`#/`, `#/pdf-to-text`, `#/to-markdown`, `#/docx-to-markdown`, `#/markdown-to-docx`, `#/plantuml`, `#/mermaid`). Szczegóły: [client/docs/install-and-run.md](client/docs/install-and-run.md).
 
-Backend i front można też uruchamiać **osobno przez PM2** (`ecosystem.config.cjs` w root): `utils-api`, `utils-client-dev`, `utils-client-preview` — patrz [client/docs/install-and-run.md](client/docs/install-and-run.md#uruchamianie-przez-pm2-opcjonalnie) i [app/docs/install-and-run.md](app/docs/install-and-run.md).
+Backend i front można też uruchamiać **osobno przez PM2** (`ecosystem.config.cjs` w root): `utils-api`, `utils-client-dev`, `utils-client-preview` — patrz [client/docs/install-and-run.md](client/docs/install-and-run.md#uruchamianie-przez-pm2-opcjonalnie) i [app/docs/install-and-run.md](app/docs/install-and-run.md). **Produkcja frontu:** `npm run build` + reverse proxy (nginx) — [Produkcja (zamiast npm run dev)](client/docs/install-and-run.md#produkcja-zamiast-npm-run-dev).
 
 ## Endpointy (skrót)
 

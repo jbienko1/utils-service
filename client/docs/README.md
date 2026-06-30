@@ -4,7 +4,7 @@ Aplikacja w katalogu [../](../) (Vite + TypeScript) — prosty interfejs do API 
 
 ## Spis treści
 
-- [install-and-run.md](install-and-run.md) — instalacja, uruchomienie, proxy, build, hosting, **interfejs (drop, kopiuj, zwijanie wyniku)**.
+- [install-and-run.md](install-and-run.md) — instalacja, uruchomienie, proxy, **produkcja (build + nginx)**, build lokalny, troubleshooting, **interfejs (drop, kopiuj, zwijanie wyniku)**.
 
 ## Powiązane
 
